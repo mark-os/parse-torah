@@ -3,8 +3,8 @@
 # To do: Generate permutations of words based on other words found in the Torah
 #        Match up words to KJV and Strong's numbers
 #        Regenerate the torah as an interlinear bible in wiki friendly format
-# To run this script,
-# Download this file and unzip: https://www.tanach.us/Books/Tanach.xml.zip
+# To run this script, first unzip Tanach.xml.zip
+# Source of the zip: https://www.tanach.us/Books/Tanach.xml.zip
 
 import sqlite3
 import xml.etree.ElementTree as ET
