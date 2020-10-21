@@ -8,8 +8,10 @@
 
 import sqlite3
 import xml.etree.ElementTree as ET
+from itertools import combinations
 
-conn = sqlite3.connect('bible.db')
+# conn = sqlite3.connect('bible.db')
+conn = sqlite3.connect(':memory:')
 
 cursor = conn.cursor()
 cursor.execute('PRAGMA foreign_keys = ON;')
@@ -17,7 +19,13 @@ conn.commit()
 
 # Create tables
 cursor.execute('''
+CREATE TABLE books(
+    ord     INTEGER PRIMARY KEY, 
+    title   TEXT UNIQUE
+    );
+''')
 
+cursor.execute('''
 CREATE TABLE words(
     ord     INTEGER PRIMARY KEY, 
     word    TEXT UNIQUE
@@ -25,18 +33,19 @@ CREATE TABLE words(
 ''')
 
 cursor.execute('''
-
 CREATE TABLE verses(
-    book    TEXT,
+    book    INTEGER,
     chapter INTEGER,
     verse   INTEGER,
     wordnum INTEGER,
     word    INTEGER,
-    PRIMARY KEY(book,chapter,verse,wordnum)
-    FOREIGN KEY(word) REFERENCES words(ord)
-    );
+    PRIMARY KEY(book,chapter,verse,wordnum),
+    FOREIGN KEY(word) REFERENCES words(ord),
+    FOREIGN KEY(book) REFERENCES books(ord)
 
+    );
 ''')
+
 conn.commit()
 
 letters = 'אבגדהוזחטיךכלםמןנסעףפץצקרשת'
@@ -45,6 +54,8 @@ wordset = set()
 
 book = ET.parse('Books/Genesis.xml')
 bookname = book.find('tanach/book/names/name').text
+cursor.execute('INSERT INTO books (title) VALUES(?);', (bookname,))
+booknum = cursor.lastrowid
 root = book.find('tanach/book')
 for chapter in root.iter('c'):
     chapnum = chapter.get('n')
@@ -58,14 +69,23 @@ for chapter in root.iter('c'):
             else:
                 wordset.add(word)
                 cursor.execute('INSERT INTO words (word) VALUES(?);', (word,))
-                # conn.commit()
-                cursor.execute('SELECT ord FROM words WHERE word = ?;', (word,))
-                order = cursor.fetchone()[0]
+                order = cursor.lastrowid
             cursor.execute(
                 'INSERT INTO verses (book,chapter,verse,wordnum,word) VALUES(?,?,?,?,?)',
-                (bookname, chapnum, vnum, i, order)
+                (booknum, chapnum, vnum, i, order)
             )
-            conn.commit()
             print('c' + chapnum + 'v' + vnum + 'w' + str(i) + ': ' + word + ' , ' + str(order))
+        conn.commit()
+
+for word in wordset:
+    substrings = []
+    for x, y in combinations(range(len(word) + 1), r = 2):
+        if y-x != len(word) and word[x:y] in wordset:
+            substrings.append(word[x:y])
+    if len(substrings) > 0:
+        print (word + ': ' + str(substrings)) 
+
+db_file = sqlite3.connect('bible.db')
+conn.backup(db_file)
 
 conn.close()
