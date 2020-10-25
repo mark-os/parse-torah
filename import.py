@@ -41,7 +41,8 @@ CREATE TABLE verses(
     ord     INTEGER,
     word    INTEGER,
     PRIMARY KEY(book,chapter,verse,ord),
-    FOREIGN KEY(word) REFERENCES words(ord)
+    FOREIGN KEY(word) REFERENCES words(ord),
+    FOREIGN KEY(book) REFERENCES books(ord)
     ) WITHOUT ROWID;
 ''')
 
@@ -116,7 +117,7 @@ def parse_book(filename):
     # Iterate through XML and get chapter/verse numbers as well as word order
     for chapter in root.iter('c'):
         chapnum = chapter.get('n')
-        print(f'parsing {bookname} chapter {chapnum}')
+        # print(f'parsing {bookname} chapter {chapnum}')
         for verse in chapter.iter('v'):
             vnum = verse.get('n')
             for index, w in enumerate(verse.iter('w'), start=1):
@@ -141,21 +142,6 @@ def insert_word(book, chapter, verse, word, order):
         'INSERT INTO verses (book,chapter,verse,ord,word) VALUES(?,?,?,?,?)',
         (book, chapter, verse, order, wordnum)
     )
-
-# Populate "Book 0" with 1,2,3 letter permutations
-
-index = 0
-for letter in letters:
-    index += 1
-    insert_word(0,1,index,letter,1)
-index = 0
-for a,b in product(letters, repeat=2):
-    index += 1
-    insert_word(0,2,index,a+b,1)
-index = 0
-for a,b,c in product(letters, repeat=3):
-    index += 1
-    insert_word(0,3,index,a+b+c,1)
 
 
 def parse_partition(part): # array of subarrays of characters
@@ -185,18 +171,33 @@ def parse_inside(part): # array of 3
     result = [(outer_num,0,False),(inner_num,len(first),True)]
     return result
 
-
 def insert_formation(wordnum, result):
     formnum = conn.execute(
         'SELECT MAX(formnum) FROM formations WHERE baseword = ?',(wordnum,)
     ).fetchone()[0] or 0
     formnum += 1
-    for sub_wordnum, pos, inside in result:
-        # print('inserting '+str((wordnum, formnum, pos, inside, sub_wordnum)))
-        conn.execute(
-            'INSERT INTO formations (baseword,formnum,pos,inner,subword) VALUES (?,?,?,?,?)',
-            (wordnum, formnum, pos, inside, sub_wordnum)
-        )
+    conn.executemany(
+        'INSERT INTO formations (baseword,formnum,pos,inner,subword) VALUES (?,?,?,?,?)',
+        [(wordnum, formnum, pos, inside, sub_wordnum) for sub_wordnum, pos, inside in result]
+    )
+
+
+# Populate "Book 0" with 1,2,3 letter permutations
+
+conn.execute("INSERT INTO books (ord,title) VALUES(0,'Book0');")
+
+index = 0
+for letter in letters:
+    index += 1
+    insert_word(0,1,index,letter,1)
+index = 0
+for a,b in product(letters, repeat=2): # These 2-letter combinations are called "gates"
+    index += 1
+    insert_word(0,2,index,a+b,1)
+index = 0
+for a,b,c in product(letters, repeat=3): # These 3-letter combinations are called "roots"
+    index += 1
+    insert_word(0,3,index,a+b+c,1)
 
 
 # Parse all books of the Tanach, insert all words/verses
@@ -207,25 +208,16 @@ for book in booklist:
 
 # Populate formations table
 
-# count = 1
 for word,wordnum in worddict.items():
-    # count += 1
-    # if count < 10000 or count > 10100: continue
-    # print(word)
     for part in partitions(word):
         if len(part) != 1:
             result = parse_partition(part)
-            # print('inserting word '+ str(wordnum) + ' with result ' + str(result))
             if result: insert_formation(wordnum, result)
         if len(part) == 3:
             result = parse_inside(part)
-            # print('inserting word '+ str(wordnum) + ' with inner result ' + str(result))
             if result: insert_formation(wordnum, result)
-            
-            # insert_formation(result)
-    
-        
-        
+
+
 # Save the in-memory DB to a file
 conn.commit()
 
