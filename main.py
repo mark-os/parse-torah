@@ -1,22 +1,26 @@
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import sqlite3
 
 app = FastAPI()
 
+def get_db():
+    try:
+        conn = sqlite3.connect('bible.db', check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        yield conn
+    finally:
+        conn.close()
 
 @app.get("/")
 def read_root():
     return "Test query API"
 
 @app.get("/query/{word}")
-def read_item(word: str):
+def read_item(word: str, conn = Depends(get_db)):
     
-    conn = sqlite3.connect('bible.db')
-
-    conn.row_factory = sqlite3.Row
-
     results = {}
+    
     for row in conn.execute("""
         select w.word as baseword, formnum, pos, inner, w2.word as subword
         from formations f
@@ -34,5 +38,4 @@ def read_item(word: str):
             results[formnum] = results.get(formnum, "") + row['subword']
         else:
             results[formnum] = results[formnum][:pos] + '(' + subword + ')' + results[formnum][pos:]
-    conn.close()
     return results
