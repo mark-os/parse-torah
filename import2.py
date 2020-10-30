@@ -1,9 +1,9 @@
 # Done: Parses through XML of the Torah, stripping vowels/accents and loading
 #       data into a Sqlite DB, also inserting formations
-# To do: Match up words to KJV and Strong's numbers
-#        Regenerate the torah as an interlinear bible in wiki friendly format
-# To run this script, first unzip Tanach.xml.zip (included)
-# Source of the zip: https://www.tanach.us/Books/Tanach.xml.zip
+# To do: Insert KJV translation
+#        API's, friendly hyperlinking dictionary frontend
+#        Interlinear verse display
+
 
 import sqlite3
 import xml.etree.ElementTree as ET
@@ -162,6 +162,7 @@ def insert_word(book, chapter, verse, word, order, astrong=None):
     strong = None
     # augmented strong sometimes contains prefixes, strip to get the strong
     if astrong:
+        astrong = astrong.replace(" ", "")
         strong = astrong.split("/")[-1].replace(" ", "")
     # calculate gematria with mod 9 arithmetic
     total = sum([letters.index(l) + 1 for l in word])
@@ -265,14 +266,12 @@ index = 0
 for letter in letters:
     index += 1
     insert_word(0, 1, index, letter, 1)
-print("inserting 2 letter words")
 index = 0
 for a, b in product(
     letters, repeat=2
 ):  # These 2-letter combinations are called "gates"
     index += 1
     insert_word(0, 2, index, a + b, 1)
-print("inserting 3 letter words")
 index = 0
 for a, b, c in product(
     letters, repeat=3
@@ -289,16 +288,17 @@ for book in booklist:
 
 # Populate formations table
 
-# for word, wordnum in worddict.items():
-#     for part in partitions(word):
-#         if len(part) != 1:
-#             result = parse_partition(part)
-#             if result:
-#                 insert_formation(wordnum, result)
-#         if len(part) == 3:
-#             result = parse_inside(part)
-#             if result:
-#                 insert_formation(wordnum, result)
+print("inserting formations for", len(worddict), "items...")
+for word, wordnum in worddict.items():
+    for part in partitions(word):
+        if len(part) != 1:
+            result = parse_partition(part)
+            if result:
+                insert_formation(wordnum, result)
+        if len(part) == 3:
+            result = parse_inside(part)
+            if result:
+                insert_formation(wordnum, result)
 
 
 # Save the in-memory DB to a file
