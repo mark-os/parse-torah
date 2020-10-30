@@ -1,0 +1,6 @@
+[submodule "morphhb"]
+	path = morphhb
+	url = https://github.com/openscriptures/morphhb.git
+[submodule "HebrewLexicon"]
+	path = HebrewLexicon
+	url = https://github.com/openscriptures/HebrewLexicon.git

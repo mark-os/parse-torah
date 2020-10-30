@@ -1,3 +1,4 @@
+#sudo apt-get install libsword-utils
 from pysword.modules import SwordModules
 modules = SwordModules('WLC.zip')
 found_modules = modules.parse_modules()

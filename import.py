@@ -20,7 +20,7 @@ conn.commit()
 conn.execute('''
 CREATE TABLE books(
     ord     INTEGER PRIMARY KEY, 
-    title   TEXT UNIQUE
+    title   TEXT UNIQUE COLLATE NOCASE
     );
 ''')
 
