@@ -3,6 +3,7 @@
 # To do: Insert KJV translation
 #        API's, friendly hyperlinking dictionary frontend
 #        Interlinear verse display
+#       the three letter words don't have meanings
 
 
 import sqlite3
