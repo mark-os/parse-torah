@@ -30,7 +30,7 @@ CREATE TABLE books(
 conn.execute(
     """
 CREATE TABLE words(
-    ord      INTEGER PRIMARY KEY, 
+    wordid   INTEGER PRIMARY KEY, 
     word     TEXT UNIQUE
     );
 """
@@ -61,7 +61,7 @@ CREATE TABLE verses(
     --kjv     TEXT,
     astrong TEXT,
     PRIMARY KEY(book,chapter,verse,ord),
-    FOREIGN KEY(word) REFERENCES words(ord),
+    FOREIGN KEY(word) REFERENCES words(wordid),
     FOREIGN KEY(book) REFERENCES books(ord)
     FOREIGN KEY(idx) REFERENCES lexicon(idx)
     ) WITHOUT ROWID;
@@ -77,8 +77,8 @@ CREATE TABLE formations(
     inner       BOOLEAN,
     subword     INTEGER,
     PRIMARY KEY(baseword,formnum,pos),
-    FOREIGN KEY(baseword) REFERENCES words(ord),
-    FOREIGN KEY(subword) REFERENCES words(ord)
+    FOREIGN KEY(baseword) REFERENCES words(wordid),
+    FOREIGN KEY(subword) REFERENCES words(wordid)
     ) WITHOUT ROWID;
 """
 )
