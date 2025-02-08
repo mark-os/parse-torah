@@ -31,9 +31,7 @@ conn.execute(
     """
 CREATE TABLE words(
     ord      INTEGER PRIMARY KEY, 
-    word     TEXT UNIQUE,
-    gematria INTEGER,
-    base7    INTEGER
+    word     TEXT UNIQUE
     );
 """
 )
@@ -160,21 +158,16 @@ def parse_book(filename, bookname):
 
 def insert_word(book, chapter, verse, word, order, astrong=None):
     strong = None
-    # augmented strong sometimes contains prefixes, strip to get the strong
     if astrong:
         astrong = astrong.replace(" ", "")
         strong = astrong.split("/")[-1].replace(" ", "")
-    # calculate gematria with mod 9 arithmetic
-    total = sum([letters.index(l) + 1 for l in word])
-    gematria = total % 9 or 9
-    # base 7 gematria
-    base7 = total % 7 or 7
-    if (wordnum := worddict.get(word)) :
+    
+    if (wordnum := worddict.get(word)):
         pass
     else:
         wordnum = conn.execute(
-            "INSERT INTO words (word,gematria,base7) VALUES(?,?,?);",
-            (word, gematria, base7),
+            "INSERT INTO words (word) VALUES(?);",
+            (word,),
         ).lastrowid
         worddict[word] = wordnum
 
