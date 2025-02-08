@@ -83,6 +83,11 @@ CREATE TABLE formations(
 """
 )
 
+# Create indexes for better query performance
+conn.execute("CREATE INDEX idx_verses_word ON verses(word);")
+conn.execute("CREATE INDEX idx_verses_idx ON verses(idx);")
+conn.execute("CREATE INDEX idx_lexicon_strong ON lexicon(strong);")
+conn.execute("CREATE INDEX idx_formations_baseword ON formations(baseword);")
 
 conn.commit()
 
