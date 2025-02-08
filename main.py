@@ -24,8 +24,8 @@ def read_item(word: str, conn = Depends(get_db)):
     for row in conn.execute("""
         select w.word as baseword, formnum, pos, inner, w2.word as subword
         from formations f
-        join words w on w.ord = f.baseword
-        join words w2 on w2.ord = f.subword
+        join words w on w.wordid = f.baseword
+        join words w2 on w2.wordid = f.subword
         where w.word = ?
     """,(word,)):
         formnum = row['formnum']
